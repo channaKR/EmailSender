@@ -13,5 +13,7 @@ namespace EmailSender.Models
 
         [Required]
         public string Body { get; set; }
+
+        public List<IFormFile>? Attachments { get; set; }
     }
 }

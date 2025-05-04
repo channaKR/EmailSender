@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 
 namespace EmailSender.Services
@@ -16,13 +17,35 @@ namespace EmailSender.Services
         {
             _settings = setting.Value;
         }
-        public async Task SendEmailAsync(string toEmail, string subject, string bodyHtml)
+        public async Task SendEmailAsync
+        ( string toEmail, 
+          string subject, 
+          string bodyHtml
+        , List<IFormFile> Attachments
+        )
         {
             var email = new MimeMessage();
             email.From.Add(new MailboxAddress(_settings.SenderName, _settings.SenderEmail));
             email.To.Add(MailboxAddress.Parse(toEmail));
             email.Subject = subject;
-            email.Body = new TextPart("html") { Text = bodyHtml };
+            //email.Body = new TextPart("html") { Text = bodyHtml };
+            var bodyBuilder = new BodyBuilder { HtmlBody = bodyHtml };
+            if (Attachments != null)
+            {
+                foreach (var attachment in Attachments)
+                {
+
+                    if (attachment.Length > 0)
+                    {
+                        using var stream = new MemoryStream();
+                        await attachment.CopyToAsync(stream);
+                        bodyBuilder.Attachments.Add
+                        (attachment.FileName, stream.ToArray(), ContentType.Parse(attachment.ContentType));
+
+                    }
+                }
+            }
+            email.Body = bodyBuilder.ToMessageBody();
             try
             {
                 using var smtp = new SmtpClient();

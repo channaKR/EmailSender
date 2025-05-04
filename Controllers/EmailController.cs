@@ -17,13 +17,13 @@ namespace EmailSender.Controllers
 
         [HttpPost]
         [Route("sendemail")]
-        public async Task<ActionResult> SendEmailAsync([FromBody] EmailRequest request)
+        public async Task<ActionResult> SendEmailAsync(EmailRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            await _emailService.SendEmailAsync(request.To,request.Subject,request.Body);
+            await _emailService.SendEmailAsync(request.To,request.Subject,request.Body, request.Attachments);
 
             return Ok("Email sent successfully.");
         }
